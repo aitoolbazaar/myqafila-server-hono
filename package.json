@@ -1,0 +1,25 @@
+{
+  "name": "myqafila-server-hono",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --hot index.ts",
+    "start": "bun run index.ts",
+    "build": "prisma generate && prisma generate --schema=prisma/schema-studio.prisma"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "prisma": "^7.8.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "hono": "^4.12.27",
+    "pg": "^8.22.0",
+    "zod": "^4.4.3"
+  }
+}
