@@ -17,12 +17,10 @@ app.use(
   "/*",
   cors({
     origin: [
-      "https://gleq.ai",
-      "https://www.gleq.ai",
+      "https://myqafila.vercel.app",
+      "https://www.myqafila.vercel.app",
       "http://localhost:3000",
       "http://localhost:5000",
-      "https://gleq-studio.vercel.app",
-      "https://www.gleq-studio.vercel.app",
     ],
     credentials: true,
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
