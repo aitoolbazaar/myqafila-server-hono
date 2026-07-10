@@ -55,14 +55,12 @@ app.onError((err, c) => {
   return sendError(c, message, status as ContentfulStatusCode, 5);
 });
 
-// 5. Server Bootstrapping (for non-serverless Node environments)
-const isProd = process.env.NODE_ENV === "production";
-const isVercel = process.env.VERCEL === "1" || process.env.VERCEL === "true";
-
-if (isProd && !isVercel) {
-  const port = Number(process.env.PORT) || 5000;
-  console.log(`🚀 Qafila Core running natively on port ${port}`);
-  serve({ fetch: app.fetch, port });
+// Vercel / Node.js एनवायरनमेंट के लिए अडैप्टर एक्सपोर्ट करें
+if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+  serve({
+    fetch: app.fetch,
+    port: Number(process.env.PORT) || 5000
+  })
 }
 
 export default app;
