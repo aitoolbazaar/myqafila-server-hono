@@ -29,6 +29,12 @@ enum EntityType {
   GUEST
 }
 
+enum EmployeeStatus {
+  active
+  blocked
+  onHold
+}
+
 // Guest Main Table
 model guest {
   id      String @id @default(uuid())
@@ -190,4 +196,45 @@ model user_stats {
   updatedAt       DateTime   @updatedAt
 
   @@unique([entityId, visitDate])
+}
+
+//============================Blacklisted Token =============================//
+
+model blacklisted_token {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+//============================End Blacklisted Token =============================//
+
+//=========================Admin===========================//
+model admin {
+  id             String         @id @default(uuid())
+  profilepic     String?
+  name           String
+  username       String         @unique
+  email          String         @unique
+  number         String?
+  roles          role[]
+  employeeStatus EmployeeStatus @default(active)
+  password       String?
+  createdAt      DateTime       @default(now()) @map("created_ts")
+
+  @@map("admins")
+}
+
+//=================================End Admin================================//
+
+//=================================roles================================//
+model role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String
+  slug        String   @unique
+  createdAt   DateTime @default(now()) @map("created_ts")
+  admins      admin[]
+
+  @@map("roles")
 }
