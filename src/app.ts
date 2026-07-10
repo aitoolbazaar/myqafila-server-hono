@@ -39,12 +39,13 @@ app.use(
 // 3. Health Check / Base Route
 app.get("/", (c) => c.html(getStatusPage()));
 
+// 4. API Routes
 import guestRoute from "./routes/guest/guest.routes";
 
 // 4. API Routers
 app.route("/api/v1/guest", guestRoute);
 
-// 4. Global Error Handler
+// 5. Global Error Handler
 app.onError((err, c) => {
   console.error("🔥 Server Error:", err);
 
