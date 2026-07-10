@@ -1,66 +1,62 @@
 import { Hono } from "hono";
-import { serve } from '@hono/node-server'
+import { serve } from "@hono/node-server";
 import { logger } from "hono/logger";
 import { cors } from "hono/cors";
-import { HTTPException } from "hono/http-exception";
-import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { compress } from "hono/compress";
 import { secureHeaders } from "hono/secure-headers";
+import { HTTPException } from "hono/http-exception";
+
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import type { HonoEnv } from "./types/hono.types";
+
 import { sendError } from "./types/shared/utils/response";
+import { getStatusPage } from "./shared/utils/statusPage";
 
 const app = new Hono<HonoEnv>();
 
-// Global Middlewares
+// 1. Allowed CORS Origins Config
+const ALLOWED_ORIGINS = [
+  "https://myqafila.vercel.app",
+  "https://www.myqafila.vercel.app",
+  "http://localhost:3000",
+  "http://localhost:5000",
+];
+
+// 2. Global Middlewares
 app.use("*", logger());
+app.use("*", compress());
+app.use("*", secureHeaders());
 app.use(
-  "/*",
+  "*",
   cors({
-    origin: [
-      "https://myqafila.vercel.app",
-      "https://www.myqafila.vercel.app",
-      "http://localhost:3000",
-      "http://localhost:5000",
-    ],
+    origin: (origin) => (ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]),
     credentials: true,
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
-  }),
+  })
 );
 
-app.use("*", compress());
-app.use("*", secureHeaders());
+// 3. Health Check / Base Route
+app.get("/", (c) => c.html(getStatusPage()));
 
-// Health Check
-app.get("/", (c) => {
-  return c.html("<h1>API Server is Running!</h1>");
-});
-
-
-
-// Global Error Handler
+// 4. Global Error Handler
 app.onError((err, c) => {
   console.error("🔥 Server Error:", err);
-  // Default server error code
-  let status: number = 500;
-  // Agar exception Hono ke route validation ya HTTP module se hai toh status code fetch karein
-  if (err instanceof HTTPException) {
-    status = err.status;
-  }
-  return sendError(
-    c,
-    err.message || "Internal Server Error",
-    status as ContentfulStatusCode,
-    5,
-  );
+
+  const status = err instanceof HTTPException ? err.status : 500;
+  const message = err.message || "Internal Server Error";
+
+  return sendError(c, message, status as ContentfulStatusCode, 5);
 });
 
-// Vercel / Node.js एनवायरनमेंट के लिए अडैप्टर एक्सपोर्ट करें
-if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
-  serve({
-    fetch: app.fetch,
-    port: Number(process.env.PORT) || 5000
-  })
+// 5. Server Bootstrapping (for non-serverless Node environments)
+const isProd = process.env.NODE_ENV === "production";
+const isVercel = process.env.VERCEL === "1" || process.env.VERCEL === "true";
+
+if (isProd && !isVercel) {
+  const port = Number(process.env.PORT) || 5000;
+  console.log(`🚀 Qafila Core running natively on port ${port}`);
+  serve({ fetch: app.fetch, port });
 }
 
 export default app;
