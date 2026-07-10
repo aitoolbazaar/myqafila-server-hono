@@ -21,14 +21,14 @@ const validationHook = (result: any, c: any) => {
 };
 
 guestRoute.post(
-  "/guest/sync",
+  "/sync",
   optionalAuthMiddleware,
   zValidator("json", syncGuestSchema, validationHook),
   GuestController.syncGuest,
 );
 
 guestRoute.get(
-  "/user/daily-status",
+  "/daily-status",
   optionalAuthMiddleware,
   zValidator("query", getUserDailyStatusSchema, validationHook),
   GuestController.getUserDailyStatus,
