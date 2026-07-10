@@ -28,6 +28,8 @@ export const sendError = (
   errorCode = 5,
   data: any = null,
 ) => {
+  console.log(data, message, "message error");
+
   return c.json(
     {
       success: false,
