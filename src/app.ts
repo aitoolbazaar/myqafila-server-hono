@@ -10,7 +10,6 @@ import type { ContentfulStatusCode } from "hono/utils/http-status";
 import type { HonoEnv } from "./types/hono.types";
 
 // import { getStatusPage } from "./shared/utils/statusPage";
-import { sendError } from "./shared/utils/response";
 
 const app = new Hono<HonoEnv>();
 
@@ -41,6 +40,7 @@ app.get("/", (c) => c.html(`<h1>API is running!</h1>`));
 
 // 4. API Routes
 import guestRoute from "./routes/guest/guest.routes";
+import { sendError } from "./shared/utils/response";
 
 // 4. API Routers
 app.route("/api/v1/guest", guestRoute);
