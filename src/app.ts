@@ -9,8 +9,8 @@ import { HTTPException } from "hono/http-exception";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import type { HonoEnv } from "./types/hono.types";
 
-import { sendError } from "./types/shared/utils/response";
 import { getStatusPage } from "./shared/utils/statusPage";
+import { sendError } from "./shared/utils/response";
 
 const app = new Hono<HonoEnv>();
 
@@ -38,6 +38,11 @@ app.use(
 
 // 3. Health Check / Base Route
 app.get("/", (c) => c.html(getStatusPage()));
+
+import guestRoute from "./routes/guest/guest.routes";
+
+// 4. API Routers
+app.route("/api/v1/guest", guestRoute);
 
 // 4. Global Error Handler
 app.onError((err, c) => {

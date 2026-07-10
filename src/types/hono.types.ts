@@ -1,5 +1,5 @@
-// import type { AdminPayload } from "./admin.types";
-// import type { UserPayload } from "./user.types";
+import type { AdminPayload } from "./admin.types";
+import type { UserPayload } from "./user.types";
 
 export type HonoEnv = {
   Bindings: {
@@ -11,9 +11,9 @@ export type HonoEnv = {
     S3_BUCKET_NAME: string;
     PORT?: string;
   };
-  // Variables: {
-  //   admin?: AdminPayload;
-  //   user?: UserPayload;
-  //   uploadedFileUrl?: string | null;
-  // };
+  Variables: {
+    admin?: AdminPayload;
+    user?: UserPayload;
+    uploadedFileUrl?: string | null;
+  };
 };
