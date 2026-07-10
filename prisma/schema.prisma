@@ -10,3 +10,231 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum Gender {
+  MALE
+  FEMALE
+  PREFER_NOT_TO_SAY
+  OTHER
+  TRANSGENDER
+}
+
+enum AuthProvider {
+  GOOGLE
+  APPLE
+}
+
+enum EntityType {
+  USER
+  GUEST
+}
+
+enum EmployeeStatus {
+  active
+  blocked
+  onHold
+}
+
+// Guest Main Table
+model guest {
+  id      String @id @default(uuid())
+  guestId String @unique // Unique ID for fingerprinting/cookies
+
+  // Conversion Tracking
+  isConverted Boolean @default(false)
+  userId      String? @unique // Link to User table if converted
+  user        user?   @relation(fields: [userId], references: [id])
+
+  // Technical Details (Moved to a separate table for performance)
+  sessionData guest_session_data?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+}
+
+// 2. Heavy Metadata Table (Device, Location, Browser)
+model guest_session_data {
+  id      String @id @default(uuid())
+  guestId String @unique
+  guest   guest  @relation(fields: [guestId], references: [guestId], onDelete: Cascade)
+
+  // --- LOCATION INFO ---
+  countryName   String?
+  countryCode   String?
+  region        String?
+  city          String?
+  timezone      String?
+  isp           String?
+  asn           String?
+  asName        String?
+  asDomain      String?
+  continentCode String?
+  continentName String?
+  latitude      String?
+  longitude     String?
+  postal        String?
+  state         String?
+
+  // --- DEVICE FLAGS & INFO ---
+  isMobile     Boolean @default(false)
+  isMobileOnly Boolean @default(false)
+  isTablet     Boolean @default(false)
+  isDesktop    Boolean @default(false)
+  isSmartTV    Boolean @default(false)
+  isWearable   Boolean @default(false)
+  isConsole    Boolean @default(false)
+  isEmbedded   Boolean @default(false)
+  deviceType   String?
+  mobileVendor String?
+  mobileModel  String?
+
+  // --- OS FLAGS & INFO ---
+  isAndroid  Boolean @default(false)
+  isWinPhone Boolean @default(false)
+  isIOS      Boolean @default(false)
+  isWindows  Boolean @default(false)
+  isMacOs    Boolean @default(false)
+  osVersion  String?
+  osName     String?
+
+  // --- BROWSER FLAGS & INFO ---
+  isChrome           Boolean @default(false)
+  isFirefox          Boolean @default(false)
+  isSafari           Boolean @default(false)
+  isOpera            Boolean @default(false)
+  isIE               Boolean @default(false)
+  isEdge             Boolean @default(false)
+  isYandex           Boolean @default(false)
+  isChromium         Boolean @default(false)
+  isMobileSafari     Boolean @default(false)
+  isSamsungBrowser   Boolean @default(false)
+  isEdgeChromium     Boolean @default(false)
+  isLegacyEdge       Boolean @default(false)
+  browserName        String?
+  fullBrowserVersion String?
+  browserVersion     String?
+
+  // --- ENGINE INFO ---
+  engineName    String?
+  engineVersion String?
+
+  // --- OTHER ---
+  isElectron Boolean @default(false)
+  userAgent  String? @db.Text
+  ipAddress  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model user {
+  id            String        @id @default(uuid())
+  linkedGuestId String?       @unique
+  email         String        @unique
+  username      String?       @unique
+  name          String?
+  provider      AuthProvider
+  googleId      String?
+  appleId       String?
+  profilePic    String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  lastCheckIn   DateTime?
+  // One-to-One relations
+  userProfile   user_profile?
+  socialLinks   social_link[]
+
+  // Conversions (Reverse Lookup)
+  guest    guest?
+  referral user_referral?
+}
+
+model user_profile {
+  id                String  @id @default(uuid())
+  userId            String  @unique
+  user              user    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phoneNumber       String?
+  bio               String? @db.VarChar(160)
+  headline          String?
+  coverImage        String?
+  gender            Gender?
+  overSixteen       Boolean @default(false)
+  profileCompletion Int     @default(0)
+  qrCode            String?
+}
+
+model user_referral {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   user   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  referralCode String? @unique
+  referredBy   String? // Kisne refer kiya (User ID)
+  isRewardUser Boolean @default(false)
+}
+
+// Support Tables (Many-to-One)
+model social_link {
+  id     String @id @default(uuid())
+  userId String
+  user   user   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title  String
+  url    String
+}
+
+model user_stats {
+  id              String     @id @default(uuid())
+  entityId        String     @unique // GuestId ya UserId
+  entityType      EntityType
+  visitDate       String // Format: "YYYY-MM-DD"
+  lastCheckInTime DateTime   @default(now())
+  visitedDates    String[] // "YYYY-MM-DD" format array
+  todayVisitCount Int        @default(1)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@unique([entityId, visitDate])
+}
+
+//============================Blacklisted Token =============================//
+
+model blacklisted_token {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+//============================End Blacklisted Token =============================//
+
+//=========================Admin===========================//
+model admin {
+  id             String         @id @default(uuid())
+  profilepic     String?
+  name           String
+  username       String         @unique
+  email          String         @unique
+  number         String?
+  roles          role[]
+  employeeStatus EmployeeStatus @default(active)
+  password       String?
+  createdAt      DateTime       @default(now()) @map("created_ts")
+
+  @@map("admins")
+}
+
+//=================================End Admin================================//
+
+//=================================roles================================//
+model role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String
+  slug        String   @unique
+  createdAt   DateTime @default(now()) @map("created_ts")
+  admins      admin[]
+
+  @@map("roles")
+}
