@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "bun run --hot index.ts",
     "start": "bun run index.ts",
-    "build": "prisma generate && esbuild vercel-entry.ts --bundle --platform=node --format=esm --target=node20 --packages=external --outfile=api/index.js"
+    "build": "prisma generate && esbuild api/index.ts --bundle --platform=node --format=esm --target=node20 --packages=external --outfile=api/index.js && node -e \"if (process.env.VERCEL && require('fs').existsSync('api/index.ts')) require('fs').unlinkSync('api/index.ts')\""
   },
   "devDependencies": {
     "@types/bun": "latest",
